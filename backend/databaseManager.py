@@ -1,3 +1,5 @@
+from datetime import datetime
+import datetime
 from sqlalchemy.sql.elements import False_
 from sqlalchemy.sql.expression import false, true
 from sqlalchemy.sql.sqltypes import String
@@ -15,13 +17,14 @@ DBSession=sessionmaker(bind=engine)
 #register
 def register(db:DBSession(),id:int,password:str,role:str,name:str):
     if role=="Parent":
+        #return {"123"}
         return parentRegister(db,id,password,name)
     else:
         return teenRegister(db,id,password,name)
 
 def parentRegister(db:DBSession(),_id:int,_password:str,_name:str):
     tem=db.query(Parent).filter(Parent.id==_id).all()
-    if(tem!=None):
+    if(len(tem)>0):
         return {'status': 'failed'}
     else:
         new_parent=Parent(id=_id,password=_password,name=_name)
@@ -105,13 +108,15 @@ def questionShuffle(db:DBSession()):
 
 def setAbleToUpload(db:DBSession(),_id:int):
     tem=db.query(Teen).filter(Teen.id==_id).all()
-    tem[0].flag=true
+    print(tem[0].flag)
+    tem[0].flag=True
+    db.commit()
     return {"status": "ok"}
 
 
 #userget
 def userSelectRead(db:DBSession(),_id:int,_role:str):
-    if _role=='Parent':
+    if _role=='Parent':        
         return parentUserSelectRead(db,_id)
     else:
         return childUserSelectRead(db,_id)
@@ -121,9 +126,9 @@ def parentUserSelectRead(db:DBSession(),_id:int):
     mes=json.loads(json.dumps(basic_info))
     tem=db.query(Parent).filter(Parent.id==_id).all()
     mes['username']=tem[0].name
-    if tem[0].child!=None:
+    if len(tem[0].child)>0:
         mes['alreadyBind']=True
-        tem2=db.query(TimeRecord).filter(TimeRecord.child_id==tem[0].child.id).all()
+        tem2=db.query(TimeRecord).filter(TimeRecord.child_id == tem[0].child[0].id).filter(TimeRecord.date==datetime.date.today()+datetime.timedelta(days=-1)).all()
         sum=0
         for i in tem2:
             sum+=i.watchTime
@@ -139,25 +144,27 @@ def childUserSelectRead(db:DBSession(),_id:int):
     tem=db.query(Teen).filter(Teen.id==_id).all()
     mes['uesrname']=tem[0].name
     mes['uniqueId']=tem[0].uid
-    tem2=db.query(TimeRecord).filter(TimeRecord.child_id==tem[0].id).all()
+    tem2=db.query(TimeRecord).filter(TimeRecord.child_id==tem[0].id).filter(TimeRecord.date==datetime.date.today()+datetime.timedelta(days=-1)).all()
     sum=0
     for i in tem2:
         sum+=i.watchTime
     mes['watchedTime']=sum
+    mes['verified']=tem[0].flag
     return mes
 
 #userpost
 def bindTeen(db:DBSession(),_id:int,uniqueld:str):
     temParent=db.query(Parent).filter(Parent.id==_id).all()
     temChild=db.query(Teen).filter(Teen.uid==uniqueld).all()
-    temChild.parent=temParent
+    print(temChild)
+    temChild[0].parent=temParent[0]
+    db.commit()
     return {"status": "ok"}
 
 def addWatchedRecord(db:DBSession(),_id:int,watchedTime:int):
     tem=db.query(Teen).filter(Teen.id==_id).all()
     new_record=TimeRecord(
         watchTime=watchedTime,
-        date='22', #此处是日期
         child=tem[0]
     )
     db.add(new_record)

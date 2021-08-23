@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import create_engine, engine
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.orm import relation, sessionmaker
@@ -5,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import json
 from sqlalchemy.sql.expression import column, false, select, true
 from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy.sql.sqltypes import Boolean, CHAR, Integer, Time
+from sqlalchemy.sql.sqltypes import Boolean, CHAR, DateTime, Integer, Time
 from sqlalchemy.sql.type_api import TypeDecorator
 from sqlalchemy.orm import relationship
 
@@ -32,6 +33,7 @@ class Parent(Base):
     password=Column(String)
     id=Column(Integer,primary_key=True)
     name=Column(String)
+    #child_id=Column(Integer,ForeignKey("teen.id"))
     child=relationship('Teen',back_populates="parent")
 
 class TimeRecord(Base):
@@ -40,7 +42,7 @@ class TimeRecord(Base):
     child=relationship("Teen",back_populates="timeRecord")
     child_id=Column(Integer,ForeignKey("teen.id"))
     watchTime=Column(Integer)
-    date=Column(String)
+    date=Column(DateTime,default=datetime.today())
 
 
 #下面是添加问题

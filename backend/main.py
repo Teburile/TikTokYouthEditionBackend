@@ -35,7 +35,6 @@ class AccountLogin(BaseModel):
     id:int
     password:str
     role:str
-    name:str
 
 
 @app.post("/login")
@@ -64,22 +63,25 @@ class teenId(BaseModel):
     id:int
 
 @app.post("/verify")
-async def setAbleToUpload(teen:teenId):
+async def setAbleUpload(teen:teenId):
     return setAbleToUpload(get_database(),teen.id)
 
+
+#user
 @app.get("/user")
 async def userSelect(id:int,role:str):
+    #return {"233"}
     return userSelectRead(get_database(),id,role)
 
 class UserTime(BaseModel):
     id:int
     role:str
-    uniqueld: Optional[str]
-    addWatchedRecord: Optional[int]
+    uniqueId: Optional[str] ="233"
+    addWatchedRecord: Optional[int]=2
 
 @app.post("/user")
 async def userUpdate(userTime:UserTime):
     if userTime.role=='Parent':
-        return bindTeen(get_database(),userTime.id,userTime.uniqueld)
+        return bindTeen(get_database(),userTime.id,userTime.uniqueId)
     else:
         return addWatchedRecord(get_database(),userTime.id,userTime.addWatchedRecord)
